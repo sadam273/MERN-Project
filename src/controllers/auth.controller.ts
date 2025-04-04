@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import * as Yup from "yup";
 import UserModel from "../models/user.model";
+import { encrypt } from "../utils/encryption";
 
 type TRegister = {
   fullname: string;
@@ -8,6 +9,12 @@ type TRegister = {
   email: string;
   password: string;
   confirmPassword: string;
+};
+
+type TLogin = {
+  identifier: string;
+  password: string;
+
 };
 
 const registerValidateSchema = Yup.object({
@@ -57,4 +64,53 @@ export default {
 
 
   },
+  async login(req: Request, res: Response){
+    const {identifier,password} = req.body as unknown as TLogin;
+    try {
+      //ambil data user berdasarkan identifer
+      //validasi password
+      const userByIdentifier = await UserModel.findOne({
+        // memastikan apakah identifier sama dengan email atau username
+        $or: [
+          {
+            email: identifier,
+          },
+          {
+            username: identifier
+          }
+        ]
+      })
+      
+      if(!userByIdentifier)
+      {
+        return res.status(403).json({
+          message: "user not found",
+          data: null
+        });
+      }
+
+      const validatePassword: boolean = encrypt(password) === userByIdentifier.password;
+
+      if(!validatePassword)
+      {
+        return res.status(403).json({
+          message: "user not found",
+          data: null
+        });
+      }
+
+      res.status(200).json({
+        message: "login success",
+        data: userByIdentifier,
+      })
+
+    } catch (error) {
+      const err = error as unknown as Error;
+
+      res.status(400).json({
+        message: err.message,
+        data: null,
+      });
+    }
+  }
 };

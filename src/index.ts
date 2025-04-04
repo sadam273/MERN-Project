@@ -10,8 +10,9 @@ async function init() {
     const app = express();
 
     const PORT = 3000;
-
+    //middleware
     app.use(bodyParser.json());
+    
     app.use("/api", router);
 
     app.listen(PORT, () => {
