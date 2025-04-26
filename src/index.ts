@@ -12,7 +12,12 @@ async function init() {
     const PORT = 3000;
     //middleware
     app.use(bodyParser.json());
-    
+    app.get("/", (req, res) => {
+      res.status(200).json({
+        message: "Server jalan",
+        data: null,
+      });
+    });
     app.use("/api", router);
 
     app.listen(PORT, () => {
