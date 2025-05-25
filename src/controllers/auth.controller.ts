@@ -16,14 +16,33 @@ type TRegister = {
 type TLogin = {
   identifier: string;
   password: string;
-
 };
 
 const registerValidateSchema = Yup.object({
   fullname: Yup.string().required(),
   username: Yup.string().required(),
   email: Yup.string().email().required(),
-  password: Yup.string().required(),
+  password: Yup.string()
+    .required()
+    .min(6, "Password must be at least 6 character")
+    .test(
+      "at-least-one-upper-case",
+      "Password must have one upper case",
+      (value) => {
+        if (!value) return false;
+        const regex = /^(?=.*[A-Z])/;
+        return regex.test(value);
+      }
+    )
+    .test(
+      "at-least-one-upper-number",
+      "Password must have one number",
+      (value) => {
+        if (!value) return false;
+        const regex = /^(?=.*\d)/;
+        return regex.test(value);
+      }
+    ),
   confirmPassword: Yup.string()
     .required()
     .oneOf([Yup.ref("password"), ""], "Password must be matched"),
@@ -63,11 +82,9 @@ export default {
         data: null,
       });
     }
-
-
   },
-  async login(req: Request, res: Response){
-    const {identifier,password} = req.body as unknown as TLogin;
+  async login(req: Request, res: Response) {
+    const { identifier, password } = req.body as unknown as TLogin;
     try {
       //ambil data user berdasarkan identifer
       //validasi password
@@ -78,26 +95,26 @@ export default {
             email: identifier,
           },
           {
-            username: identifier
-          }
-        ]
-      })
-      
-      if(!userByIdentifier)
-      {
+            username: identifier,
+          },
+        ],
+        isActive: true,
+      });
+
+      if (!userByIdentifier) {
         return res.status(403).json({
           message: "user not found",
-          data: null
+          data: null,
         });
       }
 
-      const validatePassword: boolean = encrypt(password) === userByIdentifier.password;
+      const validatePassword: boolean =
+        encrypt(password) === userByIdentifier.password;
 
-      if(!validatePassword)
-      {
+      if (!validatePassword) {
         return res.status(403).json({
           message: "user not found",
-          data: null
+          data: null,
         });
       }
 
@@ -109,8 +126,7 @@ export default {
       res.status(200).json({
         message: "login success",
         data: token,
-      })
-
+      });
     } catch (error) {
       const err = error as unknown as Error;
 
@@ -120,9 +136,8 @@ export default {
       });
     }
   },
-  async me(req: IReqUser, res: Response){
+  async me(req: IReqUser, res: Response) {
     try {
-      
       const user = req.user;
       const result = await UserModel.findById(user?.id);
 
@@ -130,7 +145,6 @@ export default {
         message: "Login sukses",
         data: result,
       });
-
     } catch (error) {
       const err = error as unknown as Error;
 
@@ -139,5 +153,33 @@ export default {
         data: null,
       });
     }
-  }
+  },
+  async activation(req: Request, res: Response) {
+    try {
+      const { code } = req.body as { code: string };
+
+      const user = await UserModel.findOneAndUpdate(
+        {
+          activationCode: code,
+        },
+        {
+          isActive: true,
+        },
+        {
+          new: true,
+        }
+      );
+      res.status(200).json({
+        message: "user sucessfully activated",
+        data: user,
+      });
+    } catch (error) {
+      const err = error as unknown as Error;
+
+      res.status(400).json({
+        message: err.message,
+        data: null,
+      });
+    }
+  },
 };
