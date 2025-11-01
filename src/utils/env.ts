@@ -13,6 +13,6 @@ export const EMAIL_SMTP_HOST: string = process.env.EMAIL_STMP_HOST || "";
 export const EMAIL_SMTP_SERVICE_NAME: string =
   process.env.EMAIL_SMTP_NAME || "";
 export const CLIENT_HOST: string =
-  process.env.CLIENT_HOST || "http://localhost:3001";
+  process.env.CLIENT_HOST || "https://front-end-acara-alpha-two.vercel.app/";
 export const GOOGLE_APP_PASSWORD: string =
   process.env.GOOGLE_APP_PASSWORD || "";
