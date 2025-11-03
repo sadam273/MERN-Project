@@ -88,6 +88,8 @@ UserSchema.post("save", async function (doc, next) {
       activationLink: `${CLIENT_HOST}/auth/activation?code=${user.activationCode}`,
     });
 
+    console.log("berhasil buat isian email");
+
     await sendEmail({
       from: "ashleyfreak488@gmail.com",
       to: user.email,
